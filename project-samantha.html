@@ -357,18 +357,76 @@ display: none;
 </div>
 
 
-<div id="r-markdown" class="section level2">
-<h2>R Markdown</h2>
-<p>This is an R Markdown document. Markdown is a simple formatting
-syntax for authoring HTML, PDF, and MS Word documents. For more details
-on using R Markdown see <a href="http://rmarkdown.rstudio.com" class="uri">http://rmarkdown.rstudio.com</a>.</p>
-<p>When you click the <strong>Knit</strong> button a document will be
-generated that includes both content as well as the output of any
-embedded R code chunks within the document. You can embed an R code
-chunk like this:</p>
-<p>Note that the <code>echo = FALSE</code> parameter was added to the
-code chunk to prevent printing of the R code that generated the
-plot.</p>
+<div id="introduction" class="section level2">
+<h2>Introduction</h2>
+</div>
+<div id="data-wrangling" class="section level2">
+<h2>Data Wrangling</h2>
+<pre class="r"><code>monomer &lt;- read_csv(&quot;protein-datasets/monomer_dataset.csv&quot;)
+homodimer &lt;- read_csv(&quot;protein-datasets/homodimer_dataset.csv&quot;)
+homotrimer &lt;- read_csv(&quot;protein-datasets/homotrimer_dataset.csv&quot;)
+homotetramer &lt;- read_csv(&quot;protein-datasets/homotetramer_dataset.csv&quot;)</code></pre>
+<p>glimpse(monomer)</p>
+<p>glimpse(homodimer)</p>
+<p>glimpse(homotrimer)</p>
+<p>glimpse(homotetramer)</p>
+<pre class="r"><code>monomer &lt;- monomer %&gt;% 
+  rename(Intrasubunit_HBonds = Intrasubunit_HBonds.1) %&gt;% 
+  mutate(chain_name = NA)</code></pre>
+<pre class="r"><code>homotetramer %&gt;% 
+  select(code, PDB_ID, Entity_ID)</code></pre>
+<pre><code>## # A tibble: 2,147 × 3
+##    code   PDB_ID Entity_ID
+##    &lt;chr&gt;  &lt;chr&gt;      &lt;dbl&gt;
+##  1 1a0d_1 1A0D           1
+##  2 1a0e_1 1A0E           1
+##  3 1a2z_1 1A2Z           1
+##  4 1a3x_1 1A3X           1
+##  5 1a4e_1 1A4E           1
+##  6 1a4s_1 1A4S           1
+##  7 1a5z_1 1A5Z           1
+##  8 1a95_1 1A95           1
+##  9 1a98_1 1A98           1
+## 10 1ae1_2 1AE1           2
+## # ℹ 2,137 more rows</code></pre>
+<pre class="r"><code>homotetramer &lt;- homotetramer %&gt;% 
+  select(-PDB_ID, -Entity_ID)</code></pre>
+<pre class="r"><code>proteins &lt;- bind_rows(monomer, homodimer, homotrimer, homotetramer)
+
+proteins %&gt;% 
+  arrange(desc(chain_name))</code></pre>
+<pre><code>## # A tibble: 23,186 × 24
+##    code   nsub2 sym   accession resol length_full Organism  foldseek_family_size
+##    &lt;chr&gt;  &lt;dbl&gt; &lt;chr&gt; &lt;chr&gt;     &lt;dbl&gt;       &lt;dbl&gt; &lt;chr&gt;                    &lt;dbl&gt;
+##  1 3zyy_1     2 C2    Q3ACS2     2.2          631 Carboxyd…                 1001
+##  2 3ers_1     2 C2    P42589     1.87         118 Escheric…                  262
+##  3 2pml_1     2 C2    Q7YTF7     2.6          348 Plasmodi…                  155
+##  4 2q18_2     2 C2    Q97UA0     2.1          293 Saccharo…                  971
+##  5 3if0_1     2 C2    Q74MS9     2.2          153 Nanoarch…                  280
+##  6 1y42_1     2 C2    P12063     1.95         392 Neurospo…                  223
+##  7 2h3g_1     2 C2    Q73FE2     2            268 Bacillus…                 1177
+##  8 3wa2_1     2 C2    P46881     1.08         621 Arthroba…                  850
+##  9 3ewb_1     2 C2    Q71Y35     2.1          293 Listeria…                  231
+## 10 3mjk_3     2 C2    P04085     2.2          169 Homo sap…                   23
+## # ℹ 23,176 more rows
+## # ℹ 16 more variables: blast_hits_cov80_eval01_uni50 &lt;dbl&gt;, compactness &lt;dbl&gt;,
+## #   surf_area_vol_ratio &lt;dbl&gt;, Intrasubunit_HBonds &lt;dbl&gt;,
+## #   contact_density_3.5A &lt;dbl&gt;, contact_density_4A &lt;dbl&gt;,
+## #   contact_density_4.5A &lt;dbl&gt;, contact_density_vdw &lt;dbl&gt;,
+## #   core_hydrophobicity &lt;dbl&gt;, VDW_Volume &lt;dbl&gt;, Surface_Dist_StdDev &lt;dbl&gt;,
+## #   core_residues &lt;dbl&gt;, surface_residues &lt;dbl&gt;, surface_area &lt;dbl&gt;, …</code></pre>
+<pre class="r"><code>proteins &lt;- proteins %&gt;% 
+  mutate(subunit_type = case_when(nsub2 == 1 ~ &quot;monomer&quot;, 
+                                  nsub2 == 2 ~ &quot;homodimer&quot;, 
+                                  nsub2 == 3 ~ &quot;homotrimer&quot;, 
+                                  nsub2 == 4 ~ &quot;homotetramer&quot;)) </code></pre>
+<pre class="r"><code>proteins &lt;- proteins %&gt;% 
+  select(-nsub2) %&gt;% 
+  relocate(chain_name, .after = code) %&gt;% 
+  relocate(subunit_type, .after = chain_name)</code></pre>
+</div>
+<div id="exploratory-data-analysis" class="section level2">
+<h2>Exploratory Data Analysis</h2>
 </div>
 
 

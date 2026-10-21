@@ -11,10 +11,66 @@ date: "2026-10-05"
 knitr::opts_chunk$set(echo = TRUE, message = TRUE, warning = TRUE)
 ```
 
-## R Markdown
+## Introduction
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+## Data Wrangling
 
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+```{r include=FALSE}
+library(tidyverse)
+```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+```{r reading-in-data, include=TRUE, message=FALSE}
+monomer <- read_csv("protein-datasets/monomer_dataset.csv")
+homodimer <- read_csv("protein-datasets/homodimer_dataset.csv")
+homotrimer <- read_csv("protein-datasets/homotrimer_dataset.csv")
+homotetramer <- read_csv("protein-datasets/homotetramer_dataset.csv")
+```
+
+glimpse(monomer)
+
+glimpse(homodimer)
+
+glimpse(homotrimer)
+
+glimpse(homotetramer)
+
+```{r mono-col_rename, include=TRUE}
+monomer <- monomer %>% 
+  rename(Intrasubunit_HBonds = Intrasubunit_HBonds.1) %>% 
+  mutate(chain_name = NA)
+```
+
+```{r}
+homotetramer %>% 
+  select(code, PDB_ID, Entity_ID)
+```
+
+```{r homo-tetra_col-remove, include=TRUE}
+homotetramer <- homotetramer %>% 
+  select(-PDB_ID, -Entity_ID)
+```
+
+```{r bind_rows-for-all-data, include=TRUE}
+proteins <- bind_rows(monomer, homodimer, homotrimer, homotetramer)
+
+proteins %>% 
+  arrange(desc(chain_name))
+```
+
+```{r naming-subunits, include=TRUE}
+proteins <- proteins %>% 
+  mutate(subunit_type = case_when(nsub2 == 1 ~ "monomer", 
+                                  nsub2 == 2 ~ "homodimer", 
+                                  nsub2 == 3 ~ "homotrimer", 
+                                  nsub2 == 4 ~ "homotetramer")) 
+```
+
+```{r organizing-dataset, include=TRUE}
+proteins <- proteins %>% 
+  select(-nsub2) %>% 
+  relocate(chain_name, .after = code) %>% 
+  relocate(subunit_type, .after = chain_name)
+```
+
+
+## Exploratory Data Analysis
