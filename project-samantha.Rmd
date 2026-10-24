@@ -8,64 +8,128 @@ date: "2026-10-05"
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE, message = TRUE, warning = TRUE)
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
 ```
 
 ## Introduction
 
-## Data Wrangling
+From hair color to height, eye color to dimples, many of the characteristics of humans (and almost every living organism on Earth) are determined by our genetics. Beyond even our physical characteristics, our genes code for less apparent traits, such as higher risks for certain medical conditions like heart disease or high blood pressure. There is a nearly infinite amount of variation in the human genome that contributes to these differences, created by millions of years of evolution. One driving factor in the evolution of our genetics are *mutations*, or changes, in our genetic code, that can be harmful (deleterious), with many of these causing genetic disorders, such as cystic fibrosis, through the loss of function of (or wrong expression of) a protein. However, mutations can also have no real, noticeable affect (neutral mutations); these neutral mutations slowly accummulate across populations, and lead to the variations between humans that we see today!
 
-```{r include=FALSE}
+One of the reasons that neutral mutations can remain in the genome of an organism and be passed down is due to the **mutational robustness** of proteins; **mutational robustness** can be defined (in this instance) as a protein structure's ability to absorb sequence changes, or mutations, without its stability, shape/structure, or function being changed or affected by the mutation. But what characteristics of a protein enable it to have high mutational robustness? How do you even quantify mutational robustness? Researchers Srijita Acharaya and Sucharita Dey conducted a recent study to evaluate these questions, and provided public access to their collected data, which I was able to find through **Figshare.** 
+
+**Dataset:** https://figshare.com/ndownloader/articles/33588613/versions/1, 
+
+**Dataset Source:** https://figshare.com/articles/dataset/_b_Protein_size_geometry_and_oligomeric_state_shape_mutational_robustness_b_/33588613?file=68432056. 
+
+The data was split across four separate datasets, where each observation in each dataset represented a specific protein, and each column represented a certain characteristic of the protein. The datasets were separated by type of subunit, or amino acid sequence/chain (i.e., building blocks), of a protein structure. Though the data was collected across multiple different datasets, the variables were almost exactly the same across all sets, with a few minor variations. A **codebook** is provided below. 
+
+| Variable                      |  Description
+|:----------------|:--------------------------------
+|`code`                         | An identifying code for a particular protein structure
+|`chain_name`                   | The location of the protein structure within/on a larger/multi-unit molecule  
+|`nsub2`                        | Number of subunits in protein structure
+|`sym`                          | A letter and number combination describing the symmetry of the protein structure
+|`accession`                    | An identifying letter and number combination code for a protein structure that is more specificly formatted than *code* and *chain_name*
+|`resol`                        | A measure of detail at which a protein structure was determined and identified by researchers/research methods; a smaller measurement corresponds to a finer-detailed structure
+|`length_full`                  | Length of protein structure calculated by number of amino acids in the sequence/chain
+|`Organism`                     | Organism from which protein structure was sampled 
+|`foldseek_family_size`         | The number of proteins in an open-source genome database with a similar structure to that of the specified protein, using the software tool Foldseek
+|`blast_hits_cov80_eval01_uni50`| Where Foldseek matched similar protein structures, BLAST matched similar *sequences* using a different open-source genome database
+|`compactness`                  | A measure of how tightly "packed" a protein structure was in terms of its core residues' ratio to the total residues of the protein structure, the surface area, and the volume of the structure; however, original dataset does not clearly state a concrete formula or method used to calculate the values for this variable.
+|`surf_area_vol_ratio`          | The surface area of the protein structure (measured in angstrom squared) divided by the total volume of the protein structure (measured in angstrom cubed)
+|`Intrasubunit_HBonds`          | The number of hydrogen bonds within the protein structure
+|`contact_density_3.5A`         | The amount of residue-residue contact between heavy atoms (atoms other than hydrogen) at a distance of roughly 3.5 angstrom, divided by the total number of residues in the protein structure; a ratio used to approximately measure how tightly packed a protein structure is
+|`contact_density_4A`           | The amount of residue-residue contact between heavy atoms (atoms other than hydrogen) at a distance of roughly 4.0 angstrom, divided by the total number of residues in the protein structure
+|`contact_density_4.5A`         | The amount of residue-residue contact between heavy atoms (atoms other than hydrogen) at a distance of roughly 4.5 angstrom, divided by the total number of residues in the protein structure
+|`contact_density_vdw`          | The amount of residue-residue contact between heavy atoms (atoms other than hydrogen), using a distance formula with the atoms' van der Waals radii calculated into it, +0.5 angstrom; a calculation that can be better generalized across protein structures with different types of atoms, as VDW measures the "effective size" of an atom by accounting for repulsion forces between it and the approaching atom
+|`core_hydrophobicity`          | The measure of hydrophobicity of a protein structure's core, though there is no clear or concrete mention of a formula used to calculate the measure
+|`VDW_Volume`                   | An estimated measure of a protein structure's volume, using van der Waals calculation of atoms' radii 
+|`Surface_Dist_StdDev`          | From the average distance of a protein structure's center of mass to its surface atoms, a standard deviation of that distance is calculated; the reasoning being that a standard deviation closer to zero indicates a more spherical, globe-like shape, and a higher-number standard deviation indicates an elongated, or irregular, structure shape
+|`core_residues`                | The number of residues within a protein structure that have relative solvent accessibility of less than 25%, calculated using the computer program NACCESS
+|`surface_residues`             | The number of residues within a specified protein structure that are calculated to be solvent-exposed, also through the computer program NACCESS
+|`surface_area`                 | The surface area, in angstrom squared, of a protein structure
+|`Function_Class`               | The specified proteins' function, such as an enzyme, transport protein, etc.
+
+
+From these variables, it is hard to tell how exactly mutational robustness will be evaluated, analyzed, and predicted. To evaluate and identify whether a protein structure exhibits robustness to mutations, one of the variables, `foldseek_family_size`, also contains the *sequences* of each of the similar/matched protein structures; in this case, a large(er) family size of a particular protein structure indicates many protein structures that, because they have near-similar structures, therefore have similar shape, function, and stability. The reasoning follows that these protein structures that have large(er) family sizes, because they have similar shape, function, and stability while having many varied sequences of amino acids/genes between them, indicates these protein structures can tolerate more variance (mutations!) in amino acid/genetic sequencing, and are thus mutationally robust. Though not a perfectly direct measure of mutational robustness, it is still a variable that can be very helpful in further predictions and inferences of mutational robustness when given a protein structure. 
+
+
+The authors of this dataset, researchers in the field of bioinformatics, have narrowed down key characteristics (variables) that can significantly contribute to mutational robustness of a protein structure. These variables include protein size and length, number of subunits, internal packing/compactness, shape of the protein (by looking at overall surface irregularity), and location of hydrogen bonds within the protein. Using these characteristics, as well as exploring other possible contributing or confounding variables in this dataset, such as `Function_Class` or `surf_area_vol_ratio`, I hope to evaluate the relationship between *all* of these variables and family size of a protein structure, to first infer how the variables contribute to the structures' mutational robustness, and to then be able to **predict** mutational robustness of a protein structure using the results of my findings from this dataset. 
+
+
+### Data Wrangling
+
+```{r tidyverse}
 library(tidyverse)
 ```
 
-```{r reading-in-data, include=TRUE, message=FALSE}
+```{r reading-in-data}
 monomer <- read_csv("protein-datasets/monomer_dataset.csv")
 homodimer <- read_csv("protein-datasets/homodimer_dataset.csv")
 homotrimer <- read_csv("protein-datasets/homotrimer_dataset.csv")
 homotetramer <- read_csv("protein-datasets/homotetramer_dataset.csv")
 ```
 
+After reading in the four datasets, I first wanted to use the `glimpse()` function to look at each dataset's number of rows and columns, data types for each variable, and spot any variations between variable names that could impact the data wrangling and exploratory analysis steps.
+
+```{r monomer-glimpse}
 glimpse(monomer)
+```
 
+```{r homodimer-glimpse}
 glimpse(homodimer)
+```
 
+```{r homotrimer-glimpse}
 glimpse(homotrimer)
+```
 
+```{r homotetramer-glimpse}
 glimpse(homotetramer)
+```
 
-```{r mono-col_rename, include=TRUE}
+After combing through each dataset, I spotted a slight variation in the variable `Intrasubunit_HBonds` in the `monomer` data frame compared to the other three; it was recorded as `Intrasubunit_HBond.1` instead. Using the `rename()` function from `**dplyr**`, I matched the variable names so that the variable matched across all the datasets!
+
+```{r mono-col_rename, include=FALSE}
 monomer <- monomer %>% 
   rename(Intrasubunit_HBonds = Intrasubunit_HBonds.1) %>% 
   mutate(chain_name = NA)
 ```
 
-```{r}
+However, there were some variables that had more glaring variations between the datasets than the problem mentioned above. The `chain_name` variable does not appear in the `monomer` dataset and thus has no values for that variable; in order to join these data sets together, one thing to do would be to have the same variables across all the datasets; therefore, my next step was to add the `chain_name` variable to the `monomer` dataset, and place NA's as its values.   
+
+```{r homotetra-select, include=FALSE}
 homotetramer %>% 
   select(code, PDB_ID, Entity_ID)
 ```
 
-```{r homo-tetra_col-remove, include=TRUE}
+
+```{r homo-tetra_col-remove, include=FALSE}
 homotetramer <- homotetramer %>% 
   select(-PDB_ID, -Entity_ID)
 ```
 
-```{r bind_rows-for-all-data, include=TRUE}
+The final visible variation across the four datasets was the appearance of two variables in the `homotetramer` dataset that do not appear in the other three; the variables `PDB_ID` and `Entity_ID`. After some investigating, I concluded that these two additional variables were unnecessary and redundant to keep, as the values in those variables were already recorded in the values of the `code` variable. After removing those two variables, I was finally able to join the datasets together into one!
+
+```{r bind_rows-for-all-data, include=FALSE}
 proteins <- bind_rows(monomer, homodimer, homotrimer, homotetramer)
 
 proteins %>% 
   arrange(desc(chain_name))
 ```
 
-```{r naming-subunits, include=TRUE}
+
+Once I had the joined the datasets together, I noticed that the `nsub2` variable was redundant and unnecessary to keep, since once I added a column classifying each row as a monomer, homodimer, homotrimer, or homotetramer, those classifications would already inform the reader of the number of subunits in the protein structure. Therefore, once I had used the variable to create the `subunit_type` variable, I removed it from the joined dataset, as well as moved some identifier variables to the front. 
+
+```{r creating-subunit_type, include=FALSE}
 proteins <- proteins %>% 
-  mutate(subunit_type = case_when(nsub2 == 1 ~ "monomer", 
-                                  nsub2 == 2 ~ "homodimer", 
-                                  nsub2 == 3 ~ "homotrimer", 
-                                  nsub2 == 4 ~ "homotetramer")) 
+  mutate(subunit_type = case_when(nsub2 == 1 ~ "Monomer", 
+                                  nsub2 == 2 ~ "Homodimer",
+                                  nsub2 == 3 ~ "Homotrimer",
+                                  nsub2 == 4 ~ "Homotetramer"))
 ```
 
-```{r organizing-dataset, include=TRUE}
+```{r organizing-dataset, include=FALSE}
 proteins <- proteins %>% 
   select(-nsub2) %>% 
   relocate(chain_name, .after = code) %>% 
@@ -73,4 +137,512 @@ proteins <- proteins %>%
 ```
 
 
+Lastly, I need to check for any missing values in my completed dataset; while I know that there will be some for the `chain_name` variable for the `monomer` subunit type, I want to check and make sure there are no other missing values I am not catching; to do this, I will use the `colSums()` function!
+
+```{r missing-values-check}
+colSums(is.na(proteins))
+```
+
+From this step, we can see that we got the 11,076 missing values of our `monomer` subunit type in the `chain_name` variable, but the missing values in the `Surface_Dist_StdDev` variable were unexpected! As we continue on to the Exploratory Data Analysis, it would be wise to keep this in the back of our minds as we explore the data, plot relationships between variables, and calculate summary statistics. 
+
+And now I'm ready to start exploring the data!
+
 ## Exploratory Data Analysis
+
+#### Exploring Subunit Type 
+
+```{r subunit-fct_relevel}
+proteins <- proteins %>% 
+  mutate(subunit_type = fct_relevel(subunit_type, "Monomer", "Homodimer", "Homotrimer",
+                                    "Homotetramer"))  
+```
+
+
+```{r bar-subunit-distrbn}
+ggplot(data = proteins, mapping = aes(x = subunit_type, 
+                                      fill = subunit_type)) + 
+  geom_bar() + 
+  labs(x = "Subunit Type", 
+       y = "Count", 
+       title = "Distribution of Subunit Types",
+       fill = NULL) + 
+  theme(legend.position = "none") + 
+  scale_fill_manual(values = c('maroon', 'lightskyblue2', 'orchid4', 'palevioletred'))
+```
+
+After releveling the `subunit_type` variable to order the subunit types in ascending order (Monomer first with one subunit, Homodimer second with two subunits, and so on) for clarity, I generated a bar chart to display the count of each type of subunit structure within the data set. From this visualization, it appears the Monomer structure has the most observations in this dataset, and the Homotrimer has the least; the Homotetramer type has the second lowest, and the Homodimer type has the second highest, with a dramatic difference in count (when looking at range) between the two highest counts and the two lowest.
+
+```{r sum-stats-type_distrbn, echo=TRUE}
+proteins %>% 
+  count(subunit_type) %>% 
+  mutate(type_perc = n / sum(n)) %>% 
+  mutate(type_perc = round(type_perc, digits = 3))
+```
+
+The table above supports this claim, as the Monomer type has the highest count in the dataset at 11,076 observations and accounts for 47.8% of the data, while the Homotrimer type has the lowest count of observations at 780, accounting for only 3.4% of the data.
+
+
+#### Protein Function Analysis
+
+
+```{r bar-function_prop}
+ggplot(proteins, aes(y = Function_Class, 
+                     fill = Function_Class)) + 
+  geom_bar() + 
+  labs(x = "Count",
+       y = NULL, 
+       title = "Distribution of Protein Functions", 
+       fill = NULL) + 
+  theme(legend.position = "none") + 
+  scale_fill_manual(values = c('maroon', 'lightskyblue2', 'palevioletred', 'orchid4', 
+                               'darkseagreen3', 'dodgerblue4', 'plum3'))
+```
+
+
+The Enzyme functional proteins have the most observations in the dataset, followed by "Other" functional proteins at the second highest observations. Structural functional proteins have the least amount of observations in the dataset, followed by Signaling functional proteins at the second lowest amount. There is a dramatic difference in count between the most common functional protein in this dataset, the Enzyme, and the least common, the Structural. 
+
+
+#### Distribution of Family Size
+
+```{r boxplot-fam_size}
+ggplot(proteins, aes(x = foldseek_family_size)) + 
+  geom_boxplot(fill = 'maroon') + 
+  labs(x = "Family Size",
+       y = NULL, 
+       title = "Distribution of Family Size of Protein Structures") + 
+  theme(axis.text.y = element_blank(), axis.ticks.y = element_blank())
+```
+
+
+```{r sum-stats-fam_size}
+proteins %>% 
+  select(foldseek_family_size) %>% 
+  summarize(median_size = median(foldseek_family_size), 
+            Q1 = quantile(foldseek_family_size, probs = 0.25), 
+            Q3 = quantile(foldseek_family_size, probs = 0.75), 
+            IQR = Q3 - Q1, 
+            max_size = max(foldseek_family_size),
+            min_size = min(foldseek_family_size))
+```
+
+
+The distribution of family size is symmetrical, if slightly right-skewed, with some high outliers. The distribution has a median family size of 497 similar matches for a specified protein structure; the spread of the distribution (when looking at IQR) is 734 matches. 
+
+
+#### Distribution of Compactness
+
+
+```{r boxplot-compactness}
+ggplot(proteins, aes(x = compactness)) + 
+  geom_boxplot(fill = 'palevioletred') + 
+  labs(x = "Compactness",
+       y = NULL, 
+       title = "Distribution of Compactness of Protein Structures") + 
+  theme(axis.text.y = element_blank(), axis.ticks.y = element_blank())
+```
+
+
+```{r sum-stats-compactness}
+proteins %>% 
+  select(compactness) %>% 
+  summarize(median_compactness = median(compactness), 
+            Q1 = quantile(compactness, probs = 0.25), 
+            Q3 = quantile(compactness, probs = 0.75), 
+            IQR = Q3 - Q1, 
+            max_compactness = max(compactness),
+            min_compactness = min(compactness))
+```
+
+
+The distribution of compactness is somewhat symmetrical, if slightly right-skewed, with high outliers on both sides of the distribution; the median compactness ratio/proportion (it is unclear how it was measured in the original dataset) is 2.95, with a spread (in terms of IQR) of 0.85; visually, its spread is smaller compared to the IQR (spread) of family size. 
+
+
+#### Distribution of Contact Density in VDW Radii of Atoms
+
+```{r boxplot-contact_density_vdw}
+ggplot(proteins, aes(x = contact_density_vdw)) + 
+  geom_boxplot(fill = 'orchid4') + 
+  labs(x = "Contact Density (in VDW Radii)",
+       y = NULL, 
+       title = "Distribution of Contact Density in VDW Radii") + 
+  theme(axis.text.y = element_blank(), axis.ticks.y = element_blank())
+```
+
+```{r sum-stats-contact_density_vdw}
+proteins %>% 
+  select(contact_density_vdw) %>% 
+  summarize(median_contact_vdw = median(contact_density_vdw), 
+            Q1 = quantile(contact_density_vdw, probs = 0.25), 
+            Q3 = quantile(contact_density_vdw, probs = 0.75), 
+            IQR = Q3 - Q1, 
+            max_contact_dn_vdw = max(contact_density_vdw),
+            min_contact_dn_vdw = min(contact_density_vdw))
+```
+
+
+The distribution of contact density (in terms of VDW Radii of an atom) is right-skewed with high outliers on both sides of the distribution, but more following the right tail of the plot; the median contact density (in terms of VDW Radii) is 2.81, with a spread (in terms of IQR) of 0.44; visually, its spread is smaller compared to the IQR (spread) of family size and compactness. 
+
+**Note!**
+I decided to analyze contact density using the VDW radii of atoms calculation (which uses angstrom as units), just because this calculation accounts for the sizes and repulsion forces between different atoms within a protein structure, whereas the other contact density measurements are arbitrary distances to separate "close" atoms and "farther away" atoms; additionally, four different measurements of contact density is unneccessary (in this instance) and can quickly clutter visualizations and graphs further on. 
+
+
+#### Distribution of Surface Irregularity
+
+```{r boxplot-surf_dist_stddev}
+ggplot(proteins, aes(x = Surface_Dist_StdDev)) + 
+  geom_boxplot(fill = 'lightskyblue2') + 
+  labs(x = "Distance (Std Dev)",
+       y = NULL, 
+       title = "Distribution of Core-to-Surface Distance Standard Deviation") + 
+  theme(axis.text.y = element_blank(), axis.ticks.y = element_blank())
+```
+
+```{r sum-stats-surf_dist_stddev}
+proteins %>% 
+  select(Surface_Dist_StdDev) %>% 
+  summarize(median_dist_stddev = median(Surface_Dist_StdDev, na.rm = TRUE), 
+            Q1 = quantile(Surface_Dist_StdDev, probs = 0.25, na.rm = TRUE), 
+            Q3 = quantile(Surface_Dist_StdDev, probs = 0.75, na.rm = TRUE), 
+            IQR = Q3 - Q1, 
+            max_dist_stddev = max(Surface_Dist_StdDev, na.rm = TRUE),
+            min_dist_stddev = min(Surface_Dist_StdDev, na.rm = TRUE))
+```
+
+
+The distribution of surface irregularity (in terms of core-to-surface distance standard deviation) is right-skewed with high outliers on the right end of the plot; the median distance standard deviation is 6.36, with a spread (in terms of IQR) of 3.33; visually, its spread is smaller compared to the IQR (spread) of family size.
+
+
+#### Distribution of Length
+
+```{r boxplot-length}
+ggplot(proteins, aes(x = length_full)) + 
+  geom_boxplot(fill = 'dodgerblue4') + 
+  labs(x = "Length",
+       y = NULL, 
+       title = "Distribution of Length of Protein Structure") + 
+  theme(axis.text.y = element_blank(), axis.ticks.y = element_blank())
+```
+
+```{r sum-stats-length}
+proteins %>% 
+  select(length_full) %>% 
+  summarize(median_length = median(length_full), 
+            Q1 = quantile(length_full, probs = 0.25), 
+            Q3 = quantile(length_full, probs = 0.75), 
+            IQR = Q3 - Q1, 
+            max_length = max(length_full),
+            min_length = min(length_full))
+```
+
+
+The distribution of length (in terms of number of amino acids in the sequence) is right-skewed with high outliers on the right end of the plot, and one extremely high outlier (4128 amino acids); the median length of a protein structure is 285 amino acids, with a spread (in terms of IQR) of 204 amino acids; visually, its spread is smaller compared to the IQR (spread) of family size, compactness, and core-to-surface distance standard deviation.
+
+
+#### Distribution of Intrasubunit Hydrogen Bonds
+
+```{r boxplot-intrasubunit_hbonds}
+ggplot(proteins, aes(x = Intrasubunit_HBonds)) + 
+  geom_boxplot(fill = 'plum3') + 
+  labs(x = "Number of Intrasubunit Hydrogen Bonds",
+       y = NULL, 
+       title = "Distribution of Intrasubunit Hydrogen Bonds in Protein Structure") + 
+  theme(axis.text.y = element_blank(), axis.ticks.y = element_blank())
+```
+
+```{r sum-stats-intrasubunit_hbonds}
+proteins %>% 
+  select(Intrasubunit_HBonds) %>% 
+  summarize(median_hbonds = median(Intrasubunit_HBonds), 
+            Q1 = quantile(Intrasubunit_HBonds, probs = 0.25), 
+            Q3 = quantile(Intrasubunit_HBonds, probs = 0.75), 
+            IQR = Q3 - Q1, 
+            max_hbonds = max(Intrasubunit_HBonds),
+            min_hbonds = min(Intrasubunit_HBonds))
+```
+
+
+The distribution of intrasubunit hydrogen bonds is right-skewed with several high outliers on the right end of the plot; the median amount of hydrogen bonds of a protein structure is 261 bonds, with a spread (in terms of IQR) of 293.75 bonds; visually, its spread is smaller compared to the IQR (spread) of family size, but slightly larger than the other analyzed variables above.
+
+
+#### Size of Protein by Subunit Type
+
+```{r boxplot-subunit-length}
+ggplot(proteins, aes(x = length_full, 
+                     y = subunit_type, 
+                     fill = subunit_type)) + 
+  geom_boxplot() + 
+  labs(x = "Length of Structure",
+       y = NULL, 
+       title = "Distribution of Protein Structure Length Across Subunit Types", 
+       fill = NULL) + 
+  theme(legend.position = "none") + 
+  scale_fill_manual(values = c('maroon', 'lightskyblue2', 'orchid4', 'palevioletred'))
+```
+
+From this visualization, it appears that the Monomer, Homodimer, and Homotetramer subunit types all have roughly similar median lengths (measured in number of amino acids) of their structures, with the Homotrimer type appearing to have the lowest median length. The Monomer type appears to have the largest spread when looking at IQR, while the three other subunit distributions appear to have roughly similar spreads when lookig at IQR. All distributions are right-skewed and have several outliers, with the Monomer distribution having an extremely high outlier. 
+
+```{r sum-stats-subunit_length, echo=TRUE}
+proteins %>% 
+  group_by(subunit_type) %>% 
+  summarize(median_length = median(length_full), 
+            Q1 = quantile(length_full, probs = 0.25), 
+            Q3 = quantile(length_full, probs = 0.75), 
+            IQR = Q3 - Q1, 
+            max_length = max(length_full),
+            min_length = min(length_full))
+```
+
+The above summary statistics support these conclusions, as the Homotrimer type has the lowest median structure length at 245.5 amino acids per protein structure and the smallest spread across the four types with an IQR of 159. While the subunit types do have roughly similar median protein structure lengths, the Homotetramer type has the highest median length at 308.0 amino acids per protein structure. The Monomer type has the largest spread across the four types with an IQR of 222. We can identify the Monomer type's extreme outlier to be a protein structure of 4,218 amino acids. 
+
+
+
+#### Surface Area Across Subunit Type
+
+
+```{r boxplot-subunit-surfarea}
+ggplot(proteins, aes(x = surface_area, 
+                     y = subunit_type, 
+                     fill = subunit_type)) + 
+  geom_boxplot() + 
+  labs(x = "Surface Area of Structure",
+       y = NULL, 
+       title = "Distribution of Protein Surface Area Across Subunit Types", 
+       fill = NULL) + 
+  theme(legend.position = "none") + 
+  scale_fill_manual(values = c('maroon', 'lightskyblue2', 'orchid4', 'palevioletred'))
+```
+
+From this visualization, it appears the Homotetramer type has the highest median surface area and largest spread (when looking at IQR) compared to the other subunit types, and the Monomer type appears to have the lowest median surface area and the lowest spread (when looking at IQR). All distributions are right-skewed with several outliers; the Homodimer and Monomer distributions seem to have extremely high outliers as well. 
+
+```{r sum-stats-subunit-surfarea}
+proteins %>% 
+  group_by(subunit_type) %>% 
+  summarize(median_sf = median(surface_area), 
+            Q1 = quantile(surface_area, probs = 0.25), 
+            Q3 = quantile(surface_area, probs = 0.75), 
+            IQR = Q3 - Q1, 
+            max_sf = max(surface_area),
+            min_sf = min(surface_area))
+```
+
+The summary statistics above support these conclusions; the Homotetramer type has the highest median surface area at 27,473.35 angstrom squared, as well as the largest spread (when looking at IQR) at 13,739.83 angstrom squared. The Monomer type has the lowest median surface area at 10,952.92 angstrom squared and the lowest spread (IQR) as well, at 6,680.84 angstrom squared; we can also identify its extremely high outlier as a surface area of 103,518.54 angstrom squared. 
+
+
+
+#### Surface Irregularity Across Subunit Type
+
+
+```{r boxplot-subunit-stddev_dist}
+ggplot(proteins, aes(x = Surface_Dist_StdDev, 
+                     y = subunit_type, 
+                     fill = subunit_type)) + 
+  geom_boxplot() + 
+  labs(x = "Distance (Std Dev)",
+       y = NULL, 
+       title = "Surface Irregularity (Shape) of Protein Across Subunit Type", 
+       subtitle = "Measured as the Standard Deviation of Core-to-Surface Distance", 
+       fill = NULL) + 
+  theme(legend.position = "none") + 
+  scale_fill_manual(values = c('maroon', 'lightskyblue2', 'orchid4', 'palevioletred'))
+```
+
+From this visualization, it appears that the Homodimer type has the highest median standard deviation of core-to-surface distance, but seems to have a roughly similar spread (in terms of IQR) to the Monomer type. The Monomer type, interestingly, appears to have the *lowest* median core-to-surface distance standard deviation, though its median seems to be similar to the Homotrimer and Homotetramer types' medians. All distributions are right-skewed with several outliers, with the Homodimer and Homotrimer (and potentially even the Homotetramer) distributions having extremely high outliers. 
+
+```{r sum-stats-subunit-stddev_dist}
+proteins %>% 
+  group_by(subunit_type) %>% 
+  summarize(median_sf = median(Surface_Dist_StdDev), 
+            Q1 = quantile(Surface_Dist_StdDev, probs = 0.25, na.rm = TRUE), 
+            Q3 = quantile(Surface_Dist_StdDev, probs = 0.75, na.rm = TRUE), 
+            IQR = Q3 - Q1, 
+            max_sf = max(Surface_Dist_StdDev),
+            min_sf = min(Surface_Dist_StdDev))
+```
+
+The summary statistics cannot adequately support these conclusions; the Homotetramer type has the highest median standard deviation of core-to-surface distance at 6.03 angstrom, as data is missing for the Homodimer and Monomer types. The Homotrimer type has the lowest median distance standard deviation across the four types (at 5.645 angstrom) due to NA's for the Monomer and Homodimer groups. Interestingly, the Homotetramer has the smallest spread in this table (IQR) at 1.82 angstrom. We can also identify the Homotrimer type's extremely high outlier of a distance standard deviation of 39.97 angstrom. 
+
+
+#### Subunit Type by Protein Function
+
+
+```{r bar-subunit-function-prop}
+ggplot(proteins, aes(y = Function_Class, 
+                     fill = subunit_type)) + 
+  geom_bar(position = "fill") + 
+  labs(x = "Proportion",
+       y = "Function", 
+       title = "Proportion of Subunit Type by Protein Function", 
+       fill = "Subunit Type") + 
+  scale_fill_manual(values = c('maroon', 'lightskyblue2', 'palevioletred', 'orchid4')) 
+```
+
+From this visualization, it appears that the Monomer subunit group makes up the largest proportion across all functional protein classes, with the Signaling functional protein appearing to have the highest proportion of the Monomer subunit type. The Homodimer and Homotrimer subunit types make up a minimal proportion of functional proteins compared to the Monomer and Homodimer types; it is difficult to tell between them which as the lowest proportions. 
+
+
+
+#### Family Size Across Subunit Type
+
+
+```{r boxplot-fam_size-subunit}
+ggplot(proteins, aes(x = foldseek_family_size, 
+                     y = subunit_type, 
+                     fill = subunit_type)) + 
+  geom_boxplot() + 
+  labs(x = "Family Size",
+       y = NULL, 
+       title = "Family Size of Protein Structure Across Subunit Type", 
+       fill = NULL) + 
+  theme(legend.position = "none") + 
+  scale_fill_manual(values = c('maroon', 'lightskyblue2', 'orchid4', 'palevioletred'))
+```
+
+From this visualization,it appears that the Homotetramer type has the highest median count of family size (or amount of similarly-structured proteins) with the smallest spread (when looking at IQR). The Monomer type has the lowest median count of family size across the four distributions, but has the largest spread when looking at IQR. The Homotrimer and Homodimer types appear to have roughly similar median counts, but the Homodimer distribution has a larger spread than the Homotrimer when looking at IQR; it appears the Homodimer type has the largest spread (IQR) across the four distributions. All types are left-skewed distributions with the exception of the Monomer type distribution, which is right-skewed with several outliers. The Homotetramer type distribution also has low outliers. 
+
+```{r sum-stats-fam_size-subunit, echo=TRUE}
+proteins %>% 
+  group_by(subunit_type) %>% 
+  summarize(median_fam_size = median(foldseek_family_size), 
+            Q1 = quantile(foldseek_family_size, probs = 0.25), 
+            Q3 = quantile(foldseek_family_size, probs = 0.75), 
+            IQR = Q3 - Q1, 
+            max_fam_size = max(foldseek_family_size),
+            min_fam_size = min(foldseek_family_size))
+```
+
+The above summary statistics support these conclusions; the Homotetramer type has the highest median count of family size at 909 similar protein structures, but has the smallest spread (IQR) at 388 similar matches. The Monomer type has the lowest median count of family size at 283 similar matches. The Homodimer type has the largest spread (IQR) at 686.5 similar matches.
+
+
+
+#### Analysis of Quantitative Variables
+
+##### Family Size by Length
+
+```{r scatter-length-fam_size}
+ggplot(proteins, mapping = aes(x = length_full, 
+                               y = foldseek_family_size, 
+                               color = subunit_type)) + 
+  geom_point() + 
+  scale_x_log10() + 
+  facet_wrap(~ subunit_type) + 
+  labs(x = "Length of Structure",
+       y = "Family Size (n)", 
+       title = "Family Size of Protein Structure by Length", 
+       subtitle = "Across Subunit Type",
+       color = NULL) + 
+  theme(legend.position = "none") + 
+  scale_color_manual(values = c('maroon', 'lightskyblue2', 'orchid4', 'palevioletred'))
+```
+
+It does not appear that there is a linear relationship or association between length of protein structure and the family size of the protein structure for any of the subunit types.
+
+
+
+##### Family Size by Surface Irregularity 
+
+
+```{r scatter-fam_size-surf_irrg}
+ggplot(proteins, mapping = aes(x = Surface_Dist_StdDev, 
+                               y = foldseek_family_size, 
+                               color = subunit_type)) + 
+  geom_point() + 
+  facet_wrap(~ subunit_type) + 
+  labs(x = "Distance (Std Dev)",
+       y = "Family Size", 
+       title = "Family Size of Protein Structure by Surface Irregularity (Shape)",
+       subtitle = "Across Subunit Type", 
+       color = NULL) + 
+  theme(legend.position = "none") + 
+  scale_color_manual(values = c('maroon', 'lightskyblue2', 'orchid4', 'palevioletred'))
+```
+
+It does not appear that there is a linear relationship or association between the standard deviation of the distance of a protein structure's core to it's surface and the family size of the protein structure for any of the subunit types.
+
+
+
+##### Family Size by Contact Density
+
+```{r scatter-fam_size-contact_density}
+ggplot(proteins, mapping = aes(x = contact_density_vdw, 
+                               y = foldseek_family_size, 
+                               color = subunit_type)) + 
+  geom_point() + 
+  facet_wrap(~ subunit_type) + 
+  labs(x = "Contact Density (angstrom)", 
+       y = "Family Size (n)", 
+       title = "Family Size of Protein Structure by Contact Density (Packedness)",
+       subtitle = "Across Subunit Type", 
+       color = NULL) + 
+  theme(legend.position = "none") + 
+  scale_color_manual(values = c('maroon', 'lightskyblue2', 'orchid4', 'palevioletred'))
+```
+
+It does not appear that there is a linear relationship or association between the residue-residue contact of a protein structure and the family size of the protein structure for any of the subunit types.
+
+***Note!*** 
+I decided to analyze contact density using the VDW radii of atoms calculation, just because this calculation accounts for the sizes and repulsion forces between different atoms within a protein structure!
+
+##### Family Size by Surface Area-to-Volume Ratio
+
+
+```{r scatter-fam_size-surfarea_vol}
+ggplot(proteins, mapping = aes(x = surf_area_vol_ratio, 
+                               y = foldseek_family_size, 
+                               color = subunit_type)) + 
+  geom_point() + 
+  facet_wrap(~ subunit_type) + 
+  labs(x = "Surface Area to Volume Ratio", 
+       y = "Family Size (n)", 
+       title = "Family Size of Protein Structure by Surface Area to Volume Ratio",
+       subtitle = "Across Subunit Type", 
+       color = NULL) + 
+  theme(legend.position = "none") + 
+  scale_color_manual(values = c('maroon', 'lightskyblue2', 'orchid4', 'palevioletred'))
+```
+
+It does not appear that there is a linear relationship or association between the surface area-to-volume ratio of protein structure and the family size of the protein structure for any of the subunit types.
+
+
+
+##### Family Size by Compactness
+
+
+```{r scatter-fam_size-compactness}
+ggplot(proteins, mapping = aes(x = compactness, 
+                               y = foldseek_family_size, 
+                               color = subunit_type)) + 
+  geom_point() + 
+  facet_wrap(~ subunit_type) + 
+  labs(x = "Proportion/Ratio", 
+       y = "Family Size (n)", 
+       title = "Family Size of Protein Structure by Compactness",
+       subtitle = "Across Subunit Type", 
+       color = NULL) + 
+  theme(legend.position = "none") + 
+  scale_color_manual(values = c('maroon', 'lightskyblue2', 'orchid4', 'palevioletred'))
+```
+
+It does not appear that there is a linear relationship or association between compactness of protein structure and the family size of the protein structure for any of the subunit types.
+
+
+##### Family Size by Intrasubunit Hydrogen Bonds
+
+
+```{r scatter-fam_siz-intra_hydrobonds}
+ggplot(proteins, mapping = aes(x = Intrasubunit_HBonds, 
+                               y = foldseek_family_size, 
+                               color = subunit_type)) + 
+  geom_point() + 
+  facet_wrap(~ subunit_type) + 
+  labs(x = "Intra-subunit Hydrogen Bonds", 
+       y = "Family Size (n)", 
+       title = "Family Size of Protein Structure by Intra-subunit Hydrogen Bonds",
+       subtitle = "Across Subunit Type", 
+       color = NULL) + 
+  theme(legend.position = "none") + 
+  scale_color_manual(values = c('maroon', 'lightskyblue2', 'orchid4', 'palevioletred'))
+```
+
+It does not appear that there is a linear relationship or association between the number of hydrogen bonds within a protein structure and the family size of the protein structure for any of the subunit types.
+
+
+Because there does not seem to be any linear relationship or association between any of these variables and our predictor variable (`foldseek_family_size`, or family size of a protein structure), one next step we could do to analyze relationships *between* variables and thus predict trends, would be to evaluate the relationship of the *intersection* of these variables with family size of a protein structure! 
